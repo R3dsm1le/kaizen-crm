@@ -1,0 +1,8 @@
+{
+  "name": "kaizen-crm-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kaizen CRM desktop shell",
+  "main": "main.js",
+  "author": "Kaizen"
+}

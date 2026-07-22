@@ -32,6 +32,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# runtime config saved from the in-app setup screen (contains DB credentials)
+.kaizen/
+
+# packaged desktop app output
+/dist-desktop
 
 # vercel
 .vercel
