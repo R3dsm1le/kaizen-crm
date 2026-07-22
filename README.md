@@ -25,7 +25,7 @@ Env vars still work and take priority (see `.env.example`): `DATABASE_URL`, plus
 
 ## Apps
 
-Your deployed instance serves a public **`/download`** page listing the latest Android APK and Windows EXE builds, pulled live from the rolling `downloads` GitHub release.
+Your deployed instance serves a public **`/download`** page listing the latest Android APK and Windows EXE builds, pulled live from the rolling `downloads` GitHub release. First-time visitors to the root URL are redirected there to choose between the web app and the downloads; picking "Open the web app" sets a cookie so later visits go straight into the app.
 
 - **Automatic builds** — the **Release installers** workflow builds the APK and EXEs on every push to `main` (and on demand) and publishes them to the `downloads` release, which feeds the `/download` page. Set the `KAIZEN_APP_URL` repository variable (Settings → Secrets and variables → Actions → Variables) to your deployed URL so the APK points at your instance.
 - **Windows (.exe)** — `npm run desktop:build` produces a portable exe and a one-click installer in `dist-desktop/` (Electron shell around the bundled server). First run shows the same in-app database setup. The **Build Windows EXE** workflow still exists for one-off artifact builds.
