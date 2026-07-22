@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/api/cron"];
+const PUBLIC_PATHS = ["/login", "/auth", "/api/cron", "/download"];
 
 /**
  * Refreshes the Supabase session and gates the app behind login.

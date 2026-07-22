@@ -25,8 +25,11 @@ Env vars still work and take priority (see `.env.example`): `DATABASE_URL`, plus
 
 ## Apps
 
-- **Windows (.exe)** — `npm run desktop:build` produces a portable exe and a one-click installer in `dist-desktop/` (Electron shell around the bundled server). First run shows the same in-app database setup. The **Build Windows EXE** GitHub Actions workflow builds these in the cloud on demand or on a `v*` tag.
-- **Android (.apk)** — deploy the app first (e.g. Vercel), then run the **Build Android APK** workflow with your deployment URL; it produces `app-debug.apk` (a Capacitor shell that loads your instance). Requires no local Android SDK.
+Your deployed instance serves a public **`/download`** page listing the latest Android APK and Windows EXE builds, pulled live from the rolling `downloads` GitHub release.
+
+- **Automatic builds** — the **Release installers** workflow builds the APK and EXEs on every push to `main` (and on demand) and publishes them to the `downloads` release, which feeds the `/download` page. Set the `KAIZEN_APP_URL` repository variable (Settings → Secrets and variables → Actions → Variables) to your deployed URL so the APK points at your instance.
+- **Windows (.exe)** — `npm run desktop:build` produces a portable exe and a one-click installer in `dist-desktop/` (Electron shell around the bundled server). First run shows the same in-app database setup. The **Build Windows EXE** workflow still exists for one-off artifact builds.
+- **Android (.apk)** — a Capacitor shell that loads your deployed instance; the **Build Android APK** workflow builds a one-off artifact from any URL. Requires no local Android SDK.
 - **PWA** — the app ships a web manifest, so any phone or desktop browser can "Add to Home Screen / Install" directly from your deployed URL — often the simplest mobile option.
 
 ## Architecture
@@ -70,4 +73,9 @@ Follow-ups stop automatically on reply, won or lost.
 
 ## Deploying to Vercel
 
-Import the repo, set `DATABASE_URL` (+ optional vars from `.env.example`), deploy. The cron schedule in `vercel.json` is picked up automatically; set `CRON_SECRET` to protect the endpoint. Prefer another scheduler (GitHub Actions, cron-job.org, crontab)? Point it at `GET /api/cron` with `Authorization: Bearer <CRON_SECRET>`.
+Two ways to get automatic deploys on every push:
+
+1. **Git integration (easiest)** — at [vercel.com/new](https://vercel.com/new), import the repo and deploy. Vercel redeploys on every push to `main` from then on.
+2. **GitHub Actions** — the **Deploy to Vercel** workflow deploys on every push to `main` once you add three repository secrets: `VERCEL_TOKEN` ([vercel.com/account/tokens](https://vercel.com/account/tokens)), `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` (run `npx vercel link` locally and copy both from `.vercel/project.json`). Without the secrets the workflow skips itself, so it never fails if you use option 1 instead.
+
+Set `DATABASE_URL` (+ optional vars from `.env.example`) in the Vercel project — or skip it and use the in-app first-run database setup. The cron schedule in `vercel.json` is picked up automatically; set `CRON_SECRET` to protect the endpoint. Prefer another scheduler (GitHub Actions, cron-job.org, crontab)? Point it at `GET /api/cron` with `Authorization: Bearer <CRON_SECRET>`.
