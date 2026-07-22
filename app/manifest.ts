@@ -6,7 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Kaizen CRM",
     short_name: "Kaizen",
     description: "A calm, AI-assisted CRM for solo consultants.",
-    start_url: "/",
+    // Through /enter so an installed PWA always opens the app itself,
+    // never the first-visit chooser page.
+    start_url: "/enter",
     display: "standalone",
     background_color: "#fcfcfb",
     theme_color: "#4a54dd",
