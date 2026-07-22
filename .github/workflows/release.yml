@@ -25,7 +25,7 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     env:
-      KAIZEN_APP_URL: ${{ inputs.app_url || vars.KAIZEN_APP_URL || 'https://kaizen-crm.vercel.app' }}
+      KAIZEN_APP_URL: ${{ inputs.app_url || vars.KAIZEN_APP_URL || 'https://kaizen-crm-seven.vercel.app' }}
     steps:
       - uses: actions/checkout@v4
 
