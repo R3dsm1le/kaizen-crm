@@ -3,9 +3,9 @@ name: Cron (automations)
 # Vercel's Hobby plan only runs cron jobs once per day, so this workflow
 # provides the every-15-minutes trigger instead: it hits /api/cron on your
 # deployed instance and the AutomationService decides what is actually due.
-# Requires the KAIZEN_APP_URL repository variable (skips politely without
-# it) and, if you set CRON_SECRET on Vercel, a matching CRON_SECRET repo
-# secret. Note GitHub disables scheduled workflows after 60 days without
+# Targets the KAIZEN_APP_URL repository variable when set, falling back
+# to the production Vercel domain. If you set CRON_SECRET on Vercel, add
+# a matching CRON_SECRET repo secret. Note GitHub disables scheduled workflows after 60 days without
 # repo activity — a single click in the Actions tab re-enables them.
 on:
   schedule:
@@ -16,7 +16,7 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     env:
-      APP_URL: ${{ vars.KAIZEN_APP_URL }}
+      APP_URL: ${{ vars.KAIZEN_APP_URL || 'https://kaizen-crm-seven.vercel.app' }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - name: Hit /api/cron

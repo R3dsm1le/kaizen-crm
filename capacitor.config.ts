@@ -5,7 +5,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * instance. Set KAIZEN_APP_URL (or edit serverUrl below) to your
  * deployment before building — the CI workflow does this for you.
  */
-const serverUrl = process.env.KAIZEN_APP_URL || "https://YOUR-DEPLOYMENT.vercel.app";
+const serverUrl = process.env.KAIZEN_APP_URL || "https://kaizen-crm-seven.vercel.app";
 
 const config: CapacitorConfig = {
   appId: "com.kaizen.crm",
