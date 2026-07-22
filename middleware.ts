@@ -10,11 +10,17 @@ const PUBLIC_PATHS = ["/login", "/auth", "/api/cron", "/download", "/enter"];
 export async function middleware(request: NextRequest) {
   // First-time visitors land on the chooser page (web app / APK / EXE)
   // instead of the app itself; /enter sets this cookie when they pick
-  // the web app.
+  // the web app. Native shells — the Android APK (a WebView, UA contains
+  // "; wv)") and the Electron desktop app — already ARE the app, so they
+  // go straight in.
   if (request.nextUrl.pathname === "/" && !request.cookies.has("kaizen_entered")) {
-    const chooserUrl = request.nextUrl.clone();
-    chooserUrl.pathname = "/download";
-    return NextResponse.redirect(chooserUrl);
+    const ua = request.headers.get("user-agent") ?? "";
+    const isNativeShell = ua.includes("; wv)") || ua.includes("Electron");
+    if (!isNativeShell) {
+      const chooserUrl = request.nextUrl.clone();
+      chooserUrl.pathname = "/download";
+      return NextResponse.redirect(chooserUrl);
+    }
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

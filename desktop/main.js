@@ -92,7 +92,9 @@ async function createWindow() {
     return { action: "deny" };
   });
 
-  await window.loadURL(`http://127.0.0.1:${port}`);
+  // Through /enter so the desktop shell always opens the app itself,
+  // never the first-visit chooser page.
+  await window.loadURL(`http://127.0.0.1:${port}/enter`);
 }
 
 app.whenReady().then(() =>
