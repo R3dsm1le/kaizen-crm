@@ -1,0 +1,100 @@
+name: Release installers
+
+# Builds the Android APK and the Windows EXEs and publishes all of them to
+# the rolling "downloads" GitHub release. The in-app /download page lists
+# whatever this release contains, so every run refreshes the download links.
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: "Deployed Kaizen URL baked into the APK (defaults to the KAIZEN_APP_URL repo variable)"
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths-ignore: ["**.md"]
+
+concurrency:
+  group: release-installers
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      KAIZEN_APP_URL: ${{ inputs.app_url || vars.KAIZEN_APP_URL || 'https://kaizen-crm.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor config (bakes the app URL into the shell)
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk kaizen-crm.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: kaizen-crm.apk
+
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build desktop app (icons + Next standalone + electron-builder)
+        run: npm run desktop:build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exe
+          path: dist-desktop/*.exe
+
+  publish:
+    needs: [apk, exe]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: downloads
+          name: Kaizen CRM downloads
+          body: >
+            Latest Android APK and Windows EXE builds, refreshed automatically
+            by the Release installers workflow. The APK is a thin shell that
+            loads your deployed instance; the EXEs run fully offline.
+          files: assets/*
