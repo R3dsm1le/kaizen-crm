@@ -36,8 +36,24 @@ export function saveRuntimeConfig(config: RuntimeConfig): void {
   fs.writeFileSync(configPath(), JSON.stringify(config, null, 2), "utf8");
 }
 
+/**
+ * Database URL provided via environment variables. DATABASE_URL wins;
+ * the POSTGRES_* names are what the Vercel × Supabase integration
+ * injects (pooled URL first — the non-pooling one is a direct,
+ * IPv6-only connection that serverless platforms can't reach).
+ */
+export function envDatabaseUrl(): string | undefined {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    undefined
+  );
+}
+
 export function getDatabaseUrl(): string | undefined {
-  return process.env.DATABASE_URL || loadRuntimeConfig().databaseUrl || undefined;
+  return envDatabaseUrl() || loadRuntimeConfig().databaseUrl || undefined;
 }
 
 export function isDatabaseConfigured(): boolean {
