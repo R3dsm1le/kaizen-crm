@@ -51,7 +51,7 @@ export default async function DashboardPage() {
     <div className="mx-auto max-w-5xl pb-16">
       <PageHeader title="Today" description="What should I do today?" />
 
-      <div className="space-y-8 px-8">
+      <div className="space-y-8 px-4 md:px-8">
         {/* KPIs */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {kpiItems.map((item) => (

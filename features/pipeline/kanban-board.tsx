@@ -70,7 +70,7 @@ export function KanbanBoard({ companies }: { companies: Company[] }) {
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="flex h-full gap-3 overflow-x-auto px-8 pb-6">
+      <div className="flex h-full gap-3 overflow-x-auto px-4 pb-6 md:px-8">
         {STAGES.map((stage) => (
           <KanbanColumn key={stage} stage={stage} companies={byStage.get(stage) ?? []} />
         ))}

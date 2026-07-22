@@ -28,7 +28,7 @@ export function Sidebar() {
   const { open } = useGlobalSearch();
 
   return (
-    <aside className="flex h-svh w-52 shrink-0 flex-col border-r bg-sidebar">
+    <aside className="hidden h-svh w-52 shrink-0 flex-col border-r bg-sidebar md:flex">
       <div className="flex items-center gap-2 px-4 pb-4 pt-5">
         <div className="flex size-6 items-center justify-center rounded-md bg-brand text-[13px] font-semibold text-brand-foreground">
           改
