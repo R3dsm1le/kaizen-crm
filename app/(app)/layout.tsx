@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/app/sidebar";
+import { MobileHeader, MobileTabBar } from "@/components/app/mobile-nav";
 import { GlobalSearchProvider } from "@/components/app/global-search";
 import { SetupNotice } from "@/components/app/setup-notice";
 import { isDatabaseConfigured } from "@/lib/runtime-config";
@@ -15,9 +16,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <GlobalSearchProvider>
-      <div className="flex h-svh overflow-hidden">
+      <div className="flex h-svh flex-col overflow-hidden md:flex-row">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <MobileHeader />
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <MobileTabBar />
       </div>
     </GlobalSearchProvider>
   );

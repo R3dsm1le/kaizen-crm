@@ -33,7 +33,7 @@ export function CompaniesTable({ companies }: { companies: Company[] }) {
   }
 
   return (
-    <div className="px-8">
+    <div className="px-4 md:px-8">
       <table className="w-full border-separate border-spacing-0 text-[13px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-muted-foreground">

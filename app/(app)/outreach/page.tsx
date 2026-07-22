@@ -63,7 +63,7 @@ export default async function OutreachPage({
   return (
     <div className="mx-auto max-w-4xl pb-16">
       <PageHeader title="Outreach" description="Every message, from draft to reply." />
-      <div className="flex gap-1 px-8 pb-4">
+      <div className="flex gap-1 overflow-x-auto px-4 pb-4 md:px-8">
         {TABS.map((t) => (
           <Link
             key={t.key}

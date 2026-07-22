@@ -15,7 +15,7 @@ export default async function SettingsPage() {
         title="Settings"
         description="Every integration is optional — the CRM works without any of them."
       />
-      <div className="px-8">
+      <div className="px-4 md:px-8">
         <SettingsForms settings={settings} />
       </div>
     </div>
