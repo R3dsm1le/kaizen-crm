@@ -1,13 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/api/cron", "/download"];
+const PUBLIC_PATHS = ["/login", "/auth", "/api/cron", "/download", "/enter"];
 
 /**
  * Refreshes the Supabase session and gates the app behind login.
  * When Supabase isn't configured the app runs open (local mode).
  */
 export async function middleware(request: NextRequest) {
+  // First-time visitors land on the chooser page (web app / APK / EXE)
+  // instead of the app itself; /enter sets this cookie when they pick
+  // the web app.
+  if (request.nextUrl.pathname === "/" && !request.cookies.has("kaizen_entered")) {
+    const chooserUrl = request.nextUrl.clone();
+    chooserUrl.pathname = "/download";
+    return NextResponse.redirect(chooserUrl);
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return NextResponse.next();

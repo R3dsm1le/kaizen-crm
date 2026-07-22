@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Download, Globe, Monitor, Smartphone } from "lucide-react";
+import { ArrowRight, Download, Globe, Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -64,11 +63,30 @@ export default async function DownloadPage() {
         <div className="flex size-8 items-center justify-center rounded-lg bg-brand text-base font-semibold text-brand-foreground">
           改
         </div>
-        <h1 className="pt-2 text-lg font-semibold tracking-tight">Get Kaizen CRM</h1>
+        <h1 className="pt-2 text-lg font-semibold tracking-tight">Welcome to Kaizen CRM</h1>
         <p className="text-sm text-muted-foreground">
-          The same workspace on every device. Pick your platform below.
+          The same workspace on every device. Choose how you want to use it.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="size-4 text-muted-foreground" /> Web app
+          </CardTitle>
+          <CardDescription>
+            Run in your browser — nothing to install. On a phone, use &ldquo;Add to Home
+            Screen&rdquo; / &ldquo;Install app&rdquo; afterwards for a native feel.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="brand" size="sm">
+            <a href="/enter">
+              Open the web app <ArrowRight />
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -125,22 +143,6 @@ export default async function DownloadPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="size-4 text-muted-foreground" /> Any device (PWA)
-          </CardTitle>
-          <CardDescription>
-            Open this site in your browser and choose &ldquo;Add to Home Screen&rdquo; or
-            &ldquo;Install app&rdquo; — no download needed.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/">Open the app</Link>
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
