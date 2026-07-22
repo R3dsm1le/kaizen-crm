@@ -2,11 +2,16 @@ import { Sidebar } from "@/components/app/sidebar";
 import { GlobalSearchProvider } from "@/components/app/global-search";
 import { SetupNotice } from "@/components/app/setup-notice";
 import { isDatabaseConfigured } from "@/lib/runtime-config";
+import { ensureMigrated } from "@/db/migrate";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isDatabaseConfigured()) {
     return <SetupNotice />;
   }
+
+  // Creates/updates tables on first load when the database came from env
+  // vars (no setup route involved). No-op once the schema is current.
+  await ensureMigrated();
 
   return (
     <GlobalSearchProvider>

@@ -1,11 +1,15 @@
-import path from "node:path";
-import fs from "node:fs";
 import { NextResponse, type NextRequest } from "next/server";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { z } from "zod";
-import { isDatabaseConfigured, loadRuntimeConfig, saveRuntimeConfig } from "@/lib/runtime-config";
+import {
+  envDatabaseUrl,
+  isDatabaseConfigured,
+  loadRuntimeConfig,
+  saveRuntimeConfig,
+} from "@/lib/runtime-config";
+import { resolveMigrationsFolder } from "@/db/migrate";
 import { getUser } from "@/lib/supabase/server";
 import { isSupabaseAuthConfigured } from "@/lib/env";
 
@@ -30,9 +34,12 @@ export async function POST(request: NextRequest) {
     const user = await getUser();
     if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-  if (process.env.DATABASE_URL) {
+  if (envDatabaseUrl()) {
     return NextResponse.json(
-      { error: "DATABASE_URL is set via environment variables — change it there instead." },
+      {
+        error:
+          "The database is set via environment variables (DATABASE_URL / POSTGRES_URL) — change it there instead.",
+      },
       { status: 409 }
     );
   }
@@ -97,12 +104,4 @@ function hostnameOf(url: string): string | null {
   } catch {
     return null;
   }
-}
-
-function resolveMigrationsFolder(): string | null {
-  const candidates = [
-    process.env.KAIZEN_MIGRATIONS_DIR,
-    path.join(process.cwd(), "db", "migrations"),
-  ].filter(Boolean) as string[];
-  return candidates.find((c) => fs.existsSync(path.join(c, "meta", "_journal.json"))) ?? null;
 }
