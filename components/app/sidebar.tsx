@@ -2,33 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  HomeIcon,
-  KanbanIcon,
-  Building2Icon,
-  SendIcon,
-  ZapIcon,
-  SettingsIcon,
-  SearchIcon,
-} from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGlobalSearch } from "./global-search";
+import { navItemsFor } from "./nav-items";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: HomeIcon, shortcut: "1" },
-  { href: "/pipeline", label: "Pipeline", icon: KanbanIcon, shortcut: "2" },
-  { href: "/companies", label: "Companies", icon: Building2Icon, shortcut: "3" },
-  { href: "/outreach", label: "Outreach", icon: SendIcon, shortcut: "4" },
-  { href: "/automations", label: "Automations", icon: ZapIcon, shortcut: "5" },
-  { href: "/settings", label: "Settings", icon: SettingsIcon, shortcut: "6" },
-];
-
-export function Sidebar() {
+/** Desktop sidebar. Hidden on phones — see MobileNav. */
+export function Sidebar({ resultsOnly = false }: { resultsOnly?: boolean }) {
   const pathname = usePathname();
   const { open } = useGlobalSearch();
+  const items = navItemsFor(resultsOnly);
 
   return (
-    <aside className="flex h-svh w-52 shrink-0 flex-col border-r bg-sidebar">
+    <aside className="hidden h-svh w-52 shrink-0 flex-col border-r bg-sidebar md:flex">
       <div className="flex items-center gap-2 px-4 pb-4 pt-5">
         <div className="flex size-6 items-center justify-center rounded-md bg-brand text-[13px] font-semibold text-brand-foreground">
           改
@@ -46,9 +32,8 @@ export function Sidebar() {
       </button>
 
       <nav className="flex flex-col gap-0.5 px-3">
-        {NAV_ITEMS.map((item) => {
-          const active =
-            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        {items.map((item) => {
+          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
@@ -77,5 +62,3 @@ export function Sidebar() {
     </aside>
   );
 }
-
-export { NAV_ITEMS };

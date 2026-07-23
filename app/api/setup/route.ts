@@ -6,8 +6,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { z } from "zod";
 import { isDatabaseConfigured, loadRuntimeConfig, saveRuntimeConfig } from "@/lib/runtime-config";
-import { getUser } from "@/lib/supabase/server";
-import { isSupabaseAuthConfigured } from "@/lib/env";
+import { assertAuthenticated } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,13 +21,17 @@ const bodySchema = z.object({
 /**
  * First-run setup: validates a Postgres connection string, applies the
  * schema migrations, and persists the URL so the app is fully configured
- * from the UI. Once a database is configured, changing it requires an
- * authenticated session (when Supabase auth is enabled).
+ * from the UI. Once a database is configured, changing it requires the
+ * unlock cookie (when APP_ACCESS_CODE is set).
  */
 export async function POST(request: NextRequest) {
-  if (isDatabaseConfigured() && isSupabaseAuthConfigured) {
-    const user = await getUser();
-    if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (isDatabaseConfigured()) {
+    // Reconfiguring an existing database requires the access cookie (when gated).
+    try {
+      await assertAuthenticated();
+    } catch {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
   }
   if (process.env.DATABASE_URL) {
     return NextResponse.json(
@@ -66,7 +69,20 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Persist. The lazy db client picks it up on the next query.
-  saveRuntimeConfig({ ...loadRuntimeConfig(), databaseUrl });
+  // On serverless hosts (Vercel) the filesystem is read-only/ephemeral —
+  // the schema is migrated by now, so point the user at env vars instead.
+  try {
+    saveRuntimeConfig({ ...loadRuntimeConfig(), databaseUrl });
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Connected and created your tables, but this host has a read-only filesystem. " +
+          "Add DATABASE_URL as an environment variable in your hosting dashboard (e.g. Vercel → Settings → Environment Variables) and redeploy.",
+      },
+      { status: 507 }
+    );
+  }
   return NextResponse.json({ ok: true });
 }
 

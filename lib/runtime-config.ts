@@ -5,10 +5,11 @@ import path from "node:path";
  * Runtime configuration saved from the UI (first-run setup), so the app
  * needs zero manual env editing. Env vars always take priority when set.
  *
- * The config lives in `.kaizen/config.json` next to the project, or in
- * KAIZEN_DATA_DIR when packaged (the desktop app points this at the OS
- * user-data folder). It holds only the database connection string —
- * every other setting lives in the database itself (Settings page).
+ * The config lives in `.kaizen/config.json` next to the project (or in
+ * KAIZEN_DATA_DIR when overridden). It holds only the database connection
+ * string — every other setting lives in the database itself (Settings).
+ * On serverless hosts the filesystem is ephemeral; use the DATABASE_URL
+ * env var there instead.
  */
 
 interface RuntimeConfig {

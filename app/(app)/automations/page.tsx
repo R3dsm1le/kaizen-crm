@@ -1,12 +1,15 @@
+import { redirect } from "next/navigation";
 import { AutomationService } from "@/services/automation-service";
 import { PageHeader } from "@/components/app/page-header";
 import { AutomationCard, type AutomationCardData } from "@/features/automations/automation-card";
 import { isDatabaseConfigured } from "@/lib/runtime-config";
+import { isMobileShell } from "@/lib/shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function AutomationsPage() {
   if (!isDatabaseConfigured()) return null; // layout renders the setup notice
+  if (await isMobileShell()) redirect("/"); // automations are managed in the web app
   const automations = await AutomationService.list();
 
   const cards: AutomationCardData[] = automations.map((a) => ({

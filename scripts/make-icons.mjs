@@ -1,12 +1,11 @@
 /**
- * Generates all app icons (PWA, favicon, desktop .ico) from one inline SVG.
+ * Generates the PWA/app icons from one inline SVG.
  * Pure vector shapes — no font dependency, renders identically everywhere.
  * Run: node scripts/make-icons.mjs
  */
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
-import pngToIco from "png-to-ico";
 
 // Minimal "kaizen" mark: brand rounded square, rising steps (continuous improvement).
 const svg = `
@@ -25,20 +24,14 @@ const svg = `
   </g>
 </svg>`;
 
-const root = process.cwd();
-const publicDir = path.join(root, "public");
-const buildDir = path.join(root, "build");
+const publicDir = path.join(process.cwd(), "public");
 fs.mkdirSync(publicDir, { recursive: true });
-fs.mkdirSync(buildDir, { recursive: true });
 
 const render = (size) => sharp(Buffer.from(svg)).resize(size, size).png().toBuffer();
-
-const [i192, i512, i180, i256] = await Promise.all([render(192), render(512), render(180), render(256)]);
+const [i192, i512, i180] = await Promise.all([render(192), render(512), render(180)]);
 
 fs.writeFileSync(path.join(publicDir, "icon-192.png"), i192);
 fs.writeFileSync(path.join(publicDir, "icon-512.png"), i512);
 fs.writeFileSync(path.join(publicDir, "apple-icon.png"), i180);
-fs.writeFileSync(path.join(buildDir, "icon.png"), i256);
-fs.writeFileSync(path.join(buildDir, "icon.ico"), await pngToIco([i256]));
 
-console.log("Icons written: public/icon-192.png, public/icon-512.png, public/apple-icon.png, build/icon.ico");
+console.log("Icons written: public/icon-192.png, public/icon-512.png, public/apple-icon.png");

@@ -1,12 +1,15 @@
+import { redirect } from "next/navigation";
 import { SettingsService } from "@/services/settings-service";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsForms } from "@/features/settings/settings-forms";
 import { isDatabaseConfigured } from "@/lib/runtime-config";
+import { isMobileShell } from "@/lib/shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   if (!isDatabaseConfigured()) return null; // layout renders the setup notice
+  if (await isMobileShell()) redirect("/"); // configuration lives in the web app
   const settings = await SettingsService.getAll();
 
   return (

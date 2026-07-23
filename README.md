@@ -8,7 +8,7 @@ Kaizen automates consulting lead management from discovery to closing: find lead
 
 ## Stack
 
-Next.js 15 · React 19 · TypeScript · TailwindCSS 4 · shadcn-style UI · Drizzle ORM · Supabase (Postgres + Auth) · Zod · React Hook Form · Gemini (optional) · SMTP/Resend (optional) · Vercel
+Next.js 15 · React 19 · TypeScript · TailwindCSS 4 · shadcn-style UI · Drizzle ORM · Postgres (Supabase) · Zod · React Hook Form · Gemini (optional) · SMTP/Resend (optional) · Vercel
 
 ## Quick start
 
@@ -21,13 +21,14 @@ Open http://localhost:3000 — a first-run screen asks for a Postgres connection
 
 Everything else — Gemini API key (free at aistudio.google.com), SMTP or Resend for sending, IMAP for reply detection, Google Places / website list / Apollo for lead discovery — is configured inside the app at **Settings**. Every integration is optional; the CRM works without any of them.
 
-Env vars still work and take priority (see `.env.example`): `DATABASE_URL`, plus optional `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` to gate the app behind a login (run `db/rls.sql` in the Supabase SQL editor if you use the API keys elsewhere) and `CRON_SECRET`.
+## Access
+
+There are **no user accounts**. Set `APP_ACCESS_CODE` (env var) to gate the whole app behind a single code — every visitor enters it once per device. Leave it unset and the app is open (fine locally; **set it on any public deployment** so strangers with your link can't use your backend, AI, or email quota). All env vars are optional and documented in `.env.example`.
 
 ## Apps
 
-- **Windows (.exe)** — `npm run desktop:build` produces a portable exe and a one-click installer in `dist-desktop/` (Electron shell around the bundled server). First run shows the same in-app database setup. The **Build Windows EXE** GitHub Actions workflow builds these in the cloud on demand or on a `v*` tag.
-- **Android (.apk)** — deploy the app first (e.g. Vercel), then run the **Build Android APK** workflow with your deployment URL; it produces `app-debug.apk` (a Capacitor shell that loads your instance). Requires no local Android SDK.
-- **PWA** — the app ships a web manifest, so any phone or desktop browser can "Add to Home Screen / Install" directly from your deployed URL — often the simplest mobile option.
+- **Android (.apk)** — deploy the app first (e.g. Vercel), then run the **Build Android APK** GitHub Actions workflow with your deployment URL; it produces `app-debug.apk` (a thin Capacitor shell that loads your instance). Requires no local Android SDK. The app opens in **results mode** — dashboard, pipeline, companies and outreach only; configuration (Settings, Automations) stays in the web app.
+- **PWA** — the app ships a web manifest, so any phone or desktop browser can "Add to Home Screen / Install" directly from your deployed URL — often the simplest mobile option (this gives the *full* app, not results mode).
 
 ## Architecture
 
@@ -70,4 +71,10 @@ Follow-ups stop automatically on reply, won or lost.
 
 ## Deploying to Vercel
 
-Import the repo, set `DATABASE_URL` (+ optional vars from `.env.example`), deploy. The cron schedule in `vercel.json` is picked up automatically; set `CRON_SECRET` to protect the endpoint. Prefer another scheduler (GitHub Actions, cron-job.org, crontab)? Point it at `GET /api/cron` with `Authorization: Bearer <CRON_SECRET>`.
+Import the repo and set these environment variables (Settings → Environment Variables):
+
+- `DATABASE_URL` — **required on Vercel**. The serverless filesystem is ephemeral, so the in-app setup screen can't persist the connection there; provide it as an env var. Run `npm run db:migrate` once locally against that database (or let the first-run setup screen migrate it) to create the tables.
+- `APP_ACCESS_CODE` — strongly recommended, so only people with your code can use the app.
+- `CRON_SECRET` — protects `GET /api/cron`.
+
+The cron schedule in `vercel.json` is picked up automatically. Prefer another scheduler (GitHub Actions, cron-job.org, crontab)? Point it at `GET /api/cron` with `Authorization: Bearer <CRON_SECRET>`.

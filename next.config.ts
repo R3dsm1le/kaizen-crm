@@ -1,14 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Standalone output powers the desktop (Electron) build; harmless on Vercel.
-  output: "standalone",
   // The setup route reads migration SQL from disk at runtime — make sure the
-  // files ship inside the standalone bundle.
+  // files ship inside the serverless bundle.
   outputFileTracingIncludes: {
     "/api/setup": ["./db/migrations/**/*"],
   },
-  // Never ship local runtime config (contains DB credentials) in the bundle.
+  // Never ship local runtime config (contains DB credentials) in any bundle.
   outputFileTracingExcludes: {
     "*": ["./.kaizen/**", ".kaizen/**", "**/.kaizen/**"],
   },
