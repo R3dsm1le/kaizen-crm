@@ -1,0 +1,59 @@
+name: Deploy to Vercel
+
+# Deploys every push to main to Vercel production. Needs three repo secrets:
+# VERCEL_TOKEN (vercel.com/account/tokens), VERCEL_ORG_ID and
+# VERCEL_PROJECT_ID (both from the project's .vercel/project.json after
+# `vercel link`, or from the Vercel project settings). Without them the
+# workflow skips instead of failing — useful if you prefer Vercel's own
+# Git integration, which makes this workflow redundant.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check Vercel credentials
+        id: creds
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN secret not set — skipping deploy. Either connect the repo in the Vercel dashboard (Git integration) or add VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID secrets."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.ok == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.creds.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Vercel CLI
+        if: steps.creds.outputs.ok == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project settings
+        if: steps.creds.outputs.ok == 'true'
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        if: steps.creds.outputs.ok == 'true'
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy
+        if: steps.creds.outputs.ok == 'true'
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"

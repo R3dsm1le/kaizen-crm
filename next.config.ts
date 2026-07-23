@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The setup route reads migration SQL from disk at runtime — make sure the
-  // files ship inside the serverless bundle.
+  // Migration SQL is read from disk at runtime (setup route + the lazy
+  // ensureMigrated on app pages) — ship it with every serverless function.
   outputFileTracingIncludes: {
-    "/api/setup": ["./db/migrations/**/*"],
+    "/**": ["./db/migrations/**/*"],
   },
-  // Never ship local runtime config (contains DB credentials) in any bundle.
+  // Never ship local runtime config (contains DB credentials) in the bundle.
   outputFileTracingExcludes: {
     "*": ["./.kaizen/**", ".kaizen/**", "**/.kaizen/**"],
   },

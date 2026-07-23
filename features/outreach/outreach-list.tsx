@@ -59,7 +59,7 @@ export function OutreachList({ rows }: { rows: OutreachRow[] }) {
   }
 
   return (
-    <div className="space-y-1.5 px-8">
+    <div className="space-y-1.5 px-4 md:px-8">
       {rows.map((row) => (
         <div
           key={row.id}

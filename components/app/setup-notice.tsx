@@ -65,8 +65,9 @@ export function SetupNotice() {
               autoComplete="off"
             />
             <p className="text-[11px] leading-relaxed text-muted-foreground">
-              Supabase: Project Settings → Database → Connection string (use the “Transaction”
-              pooler URL when deploying to Vercel).
+              Supabase: click “Connect” and copy a pooler string — the host ends in
+              pooler.supabase.com. Avoid the direct db.…supabase.co URL: it is IPv6-only and
+              often unreachable.
             </p>
           </div>
           <Button type="submit" disabled={busy || !databaseUrl.trim()} className="w-full">

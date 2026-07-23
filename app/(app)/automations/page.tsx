@@ -37,7 +37,7 @@ export default async function AutomationsPage() {
         title="Automations"
         description="Your back office. Enable what you need — everything can also run manually."
       />
-      <div className="space-y-3 px-8">
+      <div className="space-y-3 px-4 md:px-8">
         {cards.map((card) => (
           <AutomationCard key={card.key} automation={card} />
         ))}

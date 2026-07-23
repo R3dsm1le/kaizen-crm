@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 — a first-run screen asks for a Postgres connection string (create a free project at [supabase.com](https://supabase.com), copy Project Settings → Database → Connection string). Tables are created automatically. **No env editing required.**
+Open http://localhost:3000 — a first-run screen asks for a Postgres connection string (create a free project at [supabase.com](https://supabase.com), then **Connect** → copy a pooler string). Tables are created automatically. **No env editing required** locally.
 
 Everything else — Gemini API key (free at aistudio.google.com), SMTP or Resend for sending, IMAP for reply detection, Google Places / website list / Apollo for lead discovery — is configured inside the app at **Settings**. Every integration is optional; the CRM works without any of them.
 
@@ -27,8 +27,8 @@ There are **no user accounts**. Set `APP_ACCESS_CODE` (env var) to gate the whol
 
 ## Apps
 
-- **Android (.apk)** — deploy the app first (e.g. Vercel), then run the **Build Android APK** GitHub Actions workflow with your deployment URL; it produces `app-debug.apk` (a thin Capacitor shell that loads your instance). Requires no local Android SDK. The app opens in **results mode** — dashboard, pipeline, companies and outreach only; configuration (Settings, Automations) stays in the web app.
-- **PWA** — the app ships a web manifest, so any phone or desktop browser can "Add to Home Screen / Install" directly from your deployed URL — often the simplest mobile option (this gives the *full* app, not results mode).
+- **Web** — the full app. Any phone or desktop browser can also "Add to Home Screen / Install" it as a PWA directly from your deployed URL.
+- **Android (.apk)** — deploy first (see below), then run the **Build Android APK** GitHub Actions workflow with your deployment URL; it produces `app-debug.apk` (a thin Capacitor shell that loads your instance). No local Android SDK needed. The app opens in **results mode** — dashboard, pipeline, companies and outreach only; configuration (Settings, Automations) stays in the web app.
 
 ## Architecture
 
@@ -44,7 +44,7 @@ Database (db/, Drizzle + Postgres)
 
 - **Services** own every business capability (`LeadDiscoveryService`, `CompanyResearchService`, `OutreachGenerationService`, `FollowUpService`, …). They are stateless and identical whether triggered from the UI, the Automation Center or cron.
 - **Providers** hide vendors behind interfaces (`AIProvider`, `EmailProvider`, `LeadProvider`, `InboxProvider`). Adding a new lead source or LLM never touches the CRM.
-- **Jobs** (`jobs/`) are thin wrappers that only call services. `/api/cron` runs every 15 minutes (see `vercel.json`); the `AutomationService` decides what is actually due based on each automation's schedule, pause state and daily limit.
+- **Jobs** (`jobs/`) are thin wrappers that only call services. `/api/cron` runs the due automations; the `AutomationService` decides what's actually due based on each automation's schedule, pause state and daily limit.
 
 ## Pipeline
 
@@ -71,10 +71,14 @@ Follow-ups stop automatically on reply, won or lost.
 
 ## Deploying to Vercel
 
-Import the repo and set these environment variables (Settings → Environment Variables):
+Import the repo and set environment variables (Settings → Environment Variables):
 
-- `DATABASE_URL` — **required on Vercel**. The serverless filesystem is ephemeral, so the in-app setup screen can't persist the connection there; provide it as an env var. Run `npm run db:migrate` once locally against that database (or let the first-run setup screen migrate it) to create the tables.
+- `DATABASE_URL` — **required on Vercel** (the serverless filesystem is ephemeral, so the in-app setup screen can't persist there). Use a Supabase **pooler** string. If you use the Vercel × Supabase integration, its `POSTGRES_URL` is picked up automatically. Tables are auto-migrated on first load.
 - `APP_ACCESS_CODE` — strongly recommended, so only people with your code can use the app.
 - `CRON_SECRET` — protects `GET /api/cron`.
 
-The cron schedule in `vercel.json` is picked up automatically. Prefer another scheduler (GitHub Actions, cron-job.org, crontab)? Point it at `GET /api/cron` with `Authorization: Bearer <CRON_SECRET>`.
+Included GitHub Actions workflows (all optional, and skip gracefully when their secrets/variables are absent):
+
+- **Deploy to Vercel** (`deploy.yml`) — deploys `main` on push (needs `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). Skip it if you use Vercel's own Git integration.
+- **Cron** (`cron.yml`) — hits `/api/cron` every 15 minutes (Vercel Hobby cron only runs daily). Set the `KAIZEN_APP_URL` repo variable and, if used, a `CRON_SECRET` repo secret.
+- **Build Android APK** (`android.yml`) — builds the APK against your deployment URL.

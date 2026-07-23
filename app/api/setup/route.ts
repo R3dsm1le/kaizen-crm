@@ -1,11 +1,15 @@
-import path from "node:path";
-import fs from "node:fs";
 import { NextResponse, type NextRequest } from "next/server";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { z } from "zod";
-import { isDatabaseConfigured, loadRuntimeConfig, saveRuntimeConfig } from "@/lib/runtime-config";
+import {
+  envDatabaseUrl,
+  isDatabaseConfigured,
+  loadRuntimeConfig,
+  saveRuntimeConfig,
+} from "@/lib/runtime-config";
+import { resolveMigrationsFolder } from "@/db/migrate";
 import { assertAuthenticated } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -33,9 +37,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
   }
-  if (process.env.DATABASE_URL) {
+  if (envDatabaseUrl()) {
     return NextResponse.json(
-      { error: "DATABASE_URL is set via environment variables — change it there instead." },
+      {
+        error:
+          "The database is set via environment variables (DATABASE_URL / POSTGRES_URL) — change it there instead.",
+      },
       { status: 409 }
     );
   }
@@ -49,6 +56,18 @@ export async function POST(request: NextRequest) {
   }
   const { databaseUrl } = parsed.data;
 
+  // On Vercel the filesystem is ephemeral — config saved here would vanish
+  // on the next cold start, so setup must go through the env var instead.
+  if (process.env.VERCEL) {
+    return NextResponse.json(
+      {
+        error:
+          "This deployment runs on Vercel, where in-app setup can't persist. Set DATABASE_URL in Vercel → Project → Settings → Environment Variables and redeploy. Use Supabase's pooler connection string (host ends in pooler.supabase.com, from the Connect dialog) — the direct db.…supabase.co URL is IPv6-only and unreachable from Vercel.",
+      },
+      { status: 400 }
+    );
+  }
+
   // 1. Validate the connection actually works.
   const client = postgres(databaseUrl, { prepare: false, max: 1, connect_timeout: 10 });
   try {
@@ -60,8 +79,17 @@ export async function POST(request: NextRequest) {
       await migrate(drizzle(client), { migrationsFolder });
     }
   } catch (error) {
+    // Supabase's direct-connection host is IPv6-only; on IPv4-only networks
+    // it times out. Point at the pooler rather than leaving a bare timeout.
+    const host = hostnameOf(databaseUrl);
+    const supabaseHint =
+      host?.startsWith("db.") && host.endsWith(".supabase.co")
+        ? " Tip: Supabase's direct connection (db.…supabase.co) is IPv6-only — if this timed out, use a pooler string from Supabase's Connect dialog instead (host ends in pooler.supabase.com)."
+        : "";
     return NextResponse.json(
-      { error: `Could not connect: ${error instanceof Error ? error.message : error}` },
+      {
+        error: `Could not connect: ${error instanceof Error ? error.message : error}.${supabaseHint}`,
+      },
       { status: 400 }
     );
   } finally {
@@ -69,27 +97,14 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Persist. The lazy db client picks it up on the next query.
-  // On serverless hosts (Vercel) the filesystem is read-only/ephemeral —
-  // the schema is migrated by now, so point the user at env vars instead.
-  try {
-    saveRuntimeConfig({ ...loadRuntimeConfig(), databaseUrl });
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          "Connected and created your tables, but this host has a read-only filesystem. " +
-          "Add DATABASE_URL as an environment variable in your hosting dashboard (e.g. Vercel → Settings → Environment Variables) and redeploy.",
-      },
-      { status: 507 }
-    );
-  }
+  saveRuntimeConfig({ ...loadRuntimeConfig(), databaseUrl });
   return NextResponse.json({ ok: true });
 }
 
-function resolveMigrationsFolder(): string | null {
-  const candidates = [
-    process.env.KAIZEN_MIGRATIONS_DIR,
-    path.join(process.cwd(), "db", "migrations"),
-  ].filter(Boolean) as string[];
-  return candidates.find((c) => fs.existsSync(path.join(c, "meta", "_journal.json"))) ?? null;
+function hostnameOf(url: string): string | null {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
 }

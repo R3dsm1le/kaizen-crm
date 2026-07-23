@@ -1,8 +1,9 @@
 import { Sidebar } from "@/components/app/sidebar";
-import { MobileNav } from "@/components/app/mobile-nav";
+import { MobileHeader, MobileTabBar } from "@/components/app/mobile-nav";
 import { GlobalSearchProvider } from "@/components/app/global-search";
 import { SetupNotice } from "@/components/app/setup-notice";
 import { isDatabaseConfigured } from "@/lib/runtime-config";
+import { ensureMigrated } from "@/db/migrate";
 import { isMobileShell } from "@/lib/shell";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -10,15 +11,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return <SetupNotice />;
   }
 
+  // Creates/updates tables on first load when the database came from env
+  // vars (no setup route involved). No-op once the schema is current.
+  await ensureMigrated();
+
+  // The Android app enters via /m and runs results-only (no config surfaces).
   const resultsOnly = await isMobileShell();
 
   return (
     <GlobalSearchProvider>
-      <div className="flex h-svh overflow-hidden">
+      <div className="flex h-svh flex-col overflow-hidden md:flex-row">
         <Sidebar resultsOnly={resultsOnly} />
-        <main className="flex-1 overflow-y-auto pb-14 md:pb-0">{children}</main>
+        <MobileHeader />
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <MobileTabBar resultsOnly={resultsOnly} />
       </div>
-      <MobileNav resultsOnly={resultsOnly} />
     </GlobalSearchProvider>
   );
 }

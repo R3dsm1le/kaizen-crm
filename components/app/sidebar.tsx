@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useGlobalSearch } from "./global-search";
 import { navItemsFor } from "./nav-items";
 
-/** Desktop sidebar. Hidden on phones — see MobileNav. */
+/** Desktop sidebar. Hidden on phones — see MobileHeader / MobileTabBar. */
 export function Sidebar({ resultsOnly = false }: { resultsOnly?: boolean }) {
   const pathname = usePathname();
   const { open } = useGlobalSearch();
